@@ -3,14 +3,16 @@ package fr.estia.mbds.account;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 
 
 import java.time.LocalDate;
-import java.util.List;
+//import java.util.List;
 import java.util.UUID;
 
 @SpringBootApplication
+@EnableFeignClients
 public class AccountApplication {
 
 	public static void main(String[] args) {
@@ -19,27 +21,18 @@ public class AccountApplication {
 	}
 
 	@Bean
-	CommandLineRunner commandLineRunner(AccountRepository accountRepository) {
+	CommandLineRunner commandLineRunner(AccountRepository accountRepository, CustomerClient customerClient) {
 		return args -> {
-			List<Account> accountList = List.of(
-					Account.builder()
-							.id(UUID.randomUUID().toString())
-							.balance(100D)
-							.currencyType(CurrencyType.EUR)
-							.dateCreated(LocalDate.now())
-							.customerId(1L)
-							.build(),
-					Account.builder()
-							.id(UUID.randomUUID().toString())
-							.balance(200D)
-							.currencyType(CurrencyType.EUR)
-							.dateCreated(LocalDate.now())
-							.customerId(2L)
-							.build()
-			);
-			accountRepository.saveAll(accountList);
+			customerClient.getCustomers().forEach(customer -> {
+				Account account = Account.builder()
+						.customerId(customer.getId())
+						.id(UUID.randomUUID().toString())
+						.balance(Math.random()*1000)
+						.dateCreated(LocalDate.now())
+						.currencyType(CurrencyType.EUR)
+						.build();
+				accountRepository.save(account);
+			});
 		};
-
-
 	}
 }

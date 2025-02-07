@@ -11,15 +11,23 @@ import java.util.List;
 public class AccountController {
 
     private final AccountRepository accountRepository;
+    private final CustomerClient customerClient;
 
     @Autowired
-    public AccountController(AccountRepository accountRepository) {
+    public AccountController(AccountRepository accountRepository, CustomerClient customerClient) {
         this.accountRepository = accountRepository;
+        this.customerClient = customerClient;
     }
 
     @GetMapping("/accounts")
     public List<Account> getAccounts() {
-        return accountRepository.findAll();
+
+        List<Account> accountList = accountRepository.findAll();
+        accountList.forEach(account -> {
+            account.setCustomer(customerClient.getCustomerById(account.getCustomerId())); // Récuperation les données de customer
+        });
+        return accountList;
+
     }
 
     @GetMapping("/account/{id}")
